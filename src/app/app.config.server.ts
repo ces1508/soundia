@@ -5,7 +5,7 @@ import {
   withRoutes,
   RenderMode,
 } from '@angular/ssr';
-import { App } from './app';
+import { App } from './presentation/app';
 import { appConfig } from './app.config';
 
 /**

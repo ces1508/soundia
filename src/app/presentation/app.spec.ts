@@ -1,12 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 import { App } from './app';
-import { BinauralEngine } from './binaural-engine.service';
-import { MIN_SESSION_SECONDS, TRACKS } from './tracks';
+import { AUDIO_SYNTH, DATA_PROVIDERS } from '../data/di';
+import { MIN_SESSION_SECONDS } from '../domain/model/session';
+import { TRACKS } from '../domain/model/tracks';
 
 describe('App', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [App],
+      imports: [App], providers: [DATA_PROVIDERS],
     }).compileComponents();
   });
 
@@ -43,7 +44,7 @@ describe('App', () => {
   });
 
   it('should start idle without touching Web Audio', () => {
-    const engine = TestBed.inject(BinauralEngine);
+    const engine = TestBed.inject(AUDIO_SYNTH);
     expect(engine.playback()).toBe('idle');
     expect(engine.activeTrackId()).toBeNull();
   });

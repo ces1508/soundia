@@ -1,6 +1,9 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { AudioDevices, OutputDevice } from '../audio-devices.service';
-import { BinauralEngine } from '../binaural-engine.service';
+import {
+  AUDIO_DEVICES,
+  AUDIO_SYNTH,
+} from '../../data/di';
+import { OutputDevice } from '../../domain/model/device';
 
 /**
  * Estados de la comprobación guiada por oído:
@@ -10,14 +13,20 @@ import { BinauralEngine } from '../binaural-engine.service';
  */
 type CheckStep = 'idle' | 'left' | 'leftQ' | 'right' | 'rightQ' | 'ok' | 'fail';
 
+/**
+ * PRESENTACIÓN · Auriculares + comprobación guiada.
+ *
+ * Orquesta los dos puertos: al elegir dispositivo, marca el pick en el
+ * puerto de dispositivos y le pasa la ruta al puerto de síntesis.
+ */
 @Component({
   selector: 'app-device-check',
   styleUrl: './device-check.css',
   templateUrl: './device-check.html',
 })
 export class DeviceCheck {
-  protected readonly devices = inject(AudioDevices);
-  protected readonly engine = inject(BinauralEngine);
+  protected readonly devices = inject(AUDIO_DEVICES);
+  protected readonly engine = inject(AUDIO_SYNTH);
 
   protected readonly step = signal<CheckStep>('idle');
   /** true mientras suena un tono de test (bloquea botones). */
@@ -35,8 +44,8 @@ export class DeviceCheck {
 
   protected pick(device: OutputDevice): void {
     this.devices.pick(device);
-    // Si hay sesión sonando, re-rútala al dispositivo elegido al vuelo.
-    void this.engine.applySink();
+    // Orquestación: enruta la sesión en curso al dispositivo elegido.
+    void this.engine.applySink(device.deviceId);
   }
 
   protected chooseNative(): void {
@@ -51,7 +60,7 @@ export class DeviceCheck {
     if (this.checking() || this.sessionBusy()) return;
     this.checking.set(true);
     this.step.set('left');
-    await this.engine.playSideTest('left');
+    await this.engine.playSideTest('left', this.devices.selectedId());
     // Si el usuario reseteó mientras sonaba, no pisamos su estado.
     if (this.step() === 'left') this.step.set('leftQ');
     this.checking.set(false);
@@ -64,7 +73,7 @@ export class DeviceCheck {
     }
     this.checking.set(true);
     this.step.set('right');
-    await this.engine.playSideTest('right');
+    await this.engine.playSideTest('right', this.devices.selectedId());
     if (this.step() === 'right') this.step.set('rightQ');
     this.checking.set(false);
   }

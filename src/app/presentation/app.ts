@@ -1,6 +1,16 @@
 import { Component, computed, inject, OnDestroy, signal } from '@angular/core';
-import { BinauralEngine } from './binaural-engine.service';
-import { MIN_SESSION_SECONDS, TRACKS } from './tracks';
+import {
+  AUDIO_DEVICES,
+  AUDIO_SYNTH,
+} from '../data/di';
+import {
+  MIN_SESSION_SECONDS,
+  SESSION_GOAL_OPTIONS,
+  SessionGoalMinutes,
+  resolveGoalSeconds,
+  resolveProgressReference,
+} from '../domain/model/session';
+import { TRACKS } from '../domain/model/tracks';
 import { Background } from './background/background';
 import { Visualizer } from './visualizer/visualizer';
 import { DeviceCheck } from './device-check/device-check';
@@ -12,6 +22,14 @@ const ACCENTS: Record<string, string> = {
   deep: '#ff6ad5',
 };
 
+/**
+ * PRESENTACIÓN · Playlist + player.
+ *
+ * No conoce Web Audio ni MediaDevices: habla con los PUERTOS del dominio
+ * (`AUDIO_SYNTH`, `AUDIO_DEVICES`) y aquí vive la única orquestación
+ * entre adaptadores — tras iniciar sesión o elegir dispositivo, enruta
+ * el sink que el usuario haya seleccionado.
+ */
 @Component({
   selector: 'app-root',
   imports: [Background, Visualizer, DeviceCheck],
@@ -19,16 +37,18 @@ const ACCENTS: Record<string, string> = {
   styleUrl: './app.css',
 })
 export class App implements OnDestroy {
-  protected readonly engine = inject(BinauralEngine);
+  /** Puerto de síntesis (implementado por el adaptador de Web Audio). */
+  protected readonly engine = inject(AUDIO_SYNTH);
+  /** Puerto de dispositivos (implementado por el adaptador de MediaDevices). */
+  protected readonly devices = inject(AUDIO_DEVICES);
   protected readonly tracks = TRACKS;
 
   /** Duración objetivo en minutos; null = sin límite (hasta que pares). */
-  protected readonly goalMinutes = signal<number | null>(30);
-  protected readonly goalOptions: (number | null)[] = [10, 15, 30, 45, 60, null];
-  protected readonly goalSeconds = computed(() => {
-    const g = this.goalMinutes();
-    return g === null ? null : g * 60;
-  });
+  protected readonly goalMinutes = signal<SessionGoalMinutes | null>(30);
+  protected readonly goalOptions = SESSION_GOAL_OPTIONS;
+  protected readonly goalSeconds = computed(() =>
+    resolveGoalSeconds(this.goalMinutes()),
+  );
   protected readonly goalLabel = computed(() => {
     const g = this.goalMinutes();
     return g === null ? '∞' : `${String(g).padStart(2, '0')}:00`;
@@ -36,12 +56,12 @@ export class App implements OnDestroy {
 
   protected readonly elapsed = signal(0);
   protected readonly progress = computed(() => {
-    const ref = this.goalSeconds() ?? MIN_SESSION_SECONDS;
+    const ref = resolveProgressReference(this.goalSeconds());
     return Math.min(this.elapsed() / ref, 1);
   });
   protected readonly elapsedLabel = computed(() => formatClock(this.elapsed()));
   protected readonly sessionDone = computed(() => {
-    const ref = this.goalSeconds() ?? MIN_SESSION_SECONDS;
+    const ref = resolveProgressReference(this.goalSeconds());
     return this.elapsed() >= ref;
   });
 
@@ -61,6 +81,8 @@ export class App implements OnDestroy {
       this.stopClock();
     } else {
       this.engine.start(trackId);
+      // Orquestación presentación: la sesión nace en el sink elegido.
+      void this.engine.applySink(this.devices.selectedId());
       this.startClock();
     }
   }
@@ -77,7 +99,7 @@ export class App implements OnDestroy {
     this.engine.setVolume(Number(input.value) / 100);
   }
 
-  protected setGoal(value: number | null): void {
+  protected setGoal(value: SessionGoalMinutes | null): void {
     this.goalMinutes.set(value);
   }
 
