@@ -1,0 +1,57 @@
+.bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  background: radial-gradient(120% 90% at 50% 0%, #141a3d 0%, #0b0e1a 55%, #070912 100%);
+}
+
+/* Los orbes son gradientes radiales que ya desvanecen a transparente:
+   en móvil el blur(90px) no aporta casi nada visual pero obliga a
+   rasterizar capas enormes en la GPU. Se añade solo en desktop. */
+.orb {
+  position: absolute;
+  width: 55vmax;
+  height: 55vmax;
+  border-radius: 50%;
+  opacity: 0.35;
+}
+
+@media (min-width: 641px) {
+  .orb {
+    filter: blur(90px);
+  }
+}
+
+.orb-a {
+  top: -20vmax;
+  left: -12vmax;
+  background: radial-gradient(circle, #4d5dff 0%, transparent 65%);
+  animation: drift-a 26s ease-in-out infinite alternate;
+}
+
+.orb-b {
+  bottom: -24vmax;
+  right: -14vmax;
+  background: radial-gradient(circle, #00d4b8 0%, transparent 65%);
+  animation: drift-b 32s ease-in-out infinite alternate;
+}
+
+@keyframes drift-a {
+  to {
+    transform: translate(9vmax, 7vmax) scale(1.15);
+  }
+}
+
+@keyframes drift-b {
+  to {
+    transform: translate(-8vmax, -6vmax) scale(1.1);
+  }
+}
+
+.stars {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}

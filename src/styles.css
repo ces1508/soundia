@@ -1,0 +1,48 @@
+/* You can add global styles to this file, and also import other style files */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family:
+    system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  background: #0b0e1a;
+  color: #e8eaf2;
+  min-height: 100vh;
+}
+
+/* Barra de reproducción fija — mobile-first: en móvil es un mini-player
+   pegado al borde inferior (estilo Spotify), con la barra de progreso como
+   filo superior. Chrome global de la app (fuera del budget por componente). */
+.player{position:fixed;left:0;right:0;bottom:0;z-index:10;display:flex;align-items:center;gap:.75rem;padding:.6rem .8rem calc(.6rem + env(safe-area-inset-bottom));background:rgba(13,17,35,.92);border:0;border-top:1px solid rgba(255,255,255,.12);backdrop-filter:blur(20px);animation:slideup .45s cubic-bezier(.2,.9,.25,1.2) both}
+@keyframes slideup{from{opacity:0;transform:translateY(60px)}}
+.p-viz{display:none}
+.p-meta{min-width:0;flex:1;display:flex;flex-direction:column;gap:.1rem}
+.p-meta strong{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.p-meta span{font-size:.72rem;color:#9aa3c7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* En móvil la línea de progreso vive en el borde superior de la barra. */
+.p-time{position:absolute;top:0;left:0;right:0;min-width:0}
+.clock,.goal,.done{display:none}
+.bar{height:3px;background:#232a52;border-radius:0;overflow:hidden}
+.fill{height:100%;background:linear-gradient(90deg,#6d7cff,#5cff9d);transition:width .5s linear}
+.vol{display:none}
+.stopbtn{--accent:#7c8cff;flex:none;width:2.8rem;height:2.8rem;border-radius:50%;border:1px solid var(--accent);background:transparent;color:#fff;font-size:1rem;cursor:pointer;transition:background .2s,box-shadow .2s}
+.stopbtn:hover{background:rgba(255,255,255,.08);box-shadow:0 0 18px var(--accent)}
+
+/* Desktop: la barra flota centrada estilo tarjeta y se enriquece con
+   visualizador, volumen, reloj y barra de progreso propia. */
+@media (min-width:641px){
+  .player{left:50%;right:auto;bottom:1rem;transform:translateX(-50%);width:min(860px,calc(100% - 2rem));padding:.7rem 1rem;border-radius:1.2rem;border:1px solid rgba(255,255,255,.12);box-shadow:0 20px 60px -12px rgba(0,0,0,.7)}
+  .p-meta{flex:0 1 auto}
+  .p-meta span{font-size:.75rem}
+  .p-viz{display:block;flex:none;width:150px;height:46px}
+  .p-time{position:static;flex:1;min-width:120px}
+  .clock{display:inline;font-size:1.1rem;font-variant-numeric:tabular-nums}
+  .goal{display:inline;color:#9aa3c7;font-size:.8rem}
+  .done{display:inline;color:#5cff9d;font-size:.75rem;margin-left:.4rem}
+  .bar{height:4px;border-radius:1rem;margin-top:.3rem}
+  .vol{display:flex;align-items:center;gap:.45rem;font-size:.75rem;color:#9aa3c7}
+  .vol input{width:90px;accent-color:#8cffe3}
+}

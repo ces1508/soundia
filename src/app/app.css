@@ -1,0 +1,76 @@
+/* Mobile-first: la base son las pantallas pequeñas; los @media (min-width)
+   solo AÑADEN capacidades (nada se deshace). Breakpoint: 640 px, el mismo
+   del player en styles.css. */
+.page{max-width:860px;margin:0 auto;padding:1.25rem 1rem 8rem;animation:rise .7s ease both}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}}
+.brand{display:flex;align-items:center;gap:.9rem}
+.logo{display:flex;align-items:flex-end;gap:4px;height:30px}
+.logo span{width:7px;border-radius:4px;background:linear-gradient(180deg,#8cffe3,#4d5dff);animation:logob 1.6s ease-in-out infinite}
+.logo span:nth-child(1){height:45%}.logo span:nth-child(2){height:100%;animation-delay:.2s}.logo span:nth-child(3){height:65%;animation-delay:.4s}
+@keyframes logob{50%{transform:scaleY(.45)}}
+.wordmark{margin:0;font-size:1.5rem;font-weight:800;background:linear-gradient(90deg,#fff,#8cffe3);-webkit-background-clip:text;background-clip:text;color:transparent}
+.tagline{margin:0;font-size:.8rem;color:#9aa3c7}
+/* El chip de auriculares del header es refuerzo desktop: en móvil el
+   espacio manda y el aviso vivo vive en app-device-check. */
+.phones{display:none;margin-left:auto;font-size:.8rem;background:rgba(20,26,51,.6);border:1px solid rgba(255,255,255,.12);border-radius:2rem;padding:.4rem .9rem}
+.hero{margin:2.2rem 0 1.6rem}
+.hero h1{margin:0 0 .4rem;font-size:clamp(2rem,5vw,3rem);font-weight:800;background:linear-gradient(92deg,#fff 20%,#8cffe3 60%,#4d5dff 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p{margin:0;color:#c3c9e2}
+.playlist-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:.75rem}
+.playlist-head h2{margin:0;font-size:1.15rem}
+.count{font-size:.8rem;color:#9aa3c7}
+.goals{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;margin:0 0 .9rem;font-size:.8rem;color:#9aa3c7}
+.goals button{background:transparent;border:1px solid rgba(255,255,255,.16);color:#c3c9e2;border-radius:2rem;padding:.28rem .75rem;font-size:.78rem;cursor:pointer;transition:.2s}
+.goals button:hover{border-color:#8cffe3;color:#fff}
+.goals button.on{background:#8cffe3;border-color:#8cffe3;color:#0b0e1a;font-weight:700}
+.playlist{list-style:none;margin:0;padding:0;display:grid;gap:.7rem}
+/* Móvil: la tarjeta es una lista tipo chat — controles arriba y el texto
+   fluyendo a ancho completo debajo. El truco: .meta se disuelve con
+   display:contents y sus hijos pasan a ser ítems del flex de .track.
+   Sin backdrop-filter: con 7+ tarjetas desenfocadas, cada frame de scroll
+   repinta todos los vidrios; en móvil el fondo plano y translúcido basta. */
+.track{--accent:#7c8cff;display:flex;flex-wrap:wrap;align-items:flex-start;gap:.55rem 1rem;padding:.9rem 1.1rem;border-radius:1.1rem;background:rgba(18,23,46,.72);border:1px solid rgba(255,255,255,.09);transition:.25s}
+.track:hover{transform:translateY(-2px);border-color:var(--accent);box-shadow:0 12px 32px -12px var(--accent)}
+.track.active{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent),0 14px 40px -12px var(--accent)}
+.playbtn{flex:none;width:3rem;height:3rem;border-radius:50%;border:0;cursor:pointer;display:grid;place-items:center;color:#0b0e1a;background:linear-gradient(135deg,var(--accent),#fff 160%);transition:.2s}
+.playbtn:hover:not(:disabled){transform:scale(1.08);box-shadow:0 0 22px var(--accent)}
+.playbtn:disabled{cursor:wait;opacity:.7}
+.tri{width:0;height:0;margin-left:3px;border-left:13px solid currentcolor;border-top:8px solid transparent;border-bottom:8px solid transparent}
+.eq{display:flex;align-items:flex-end;gap:3px;height:18px}
+.eq span{width:4px;border-radius:2px;background:currentcolor;animation:eqb .9s ease-in-out infinite}
+.eq span:nth-child(1){height:60%}.eq span:nth-child(2){height:100%;animation-delay:.25s}.eq span:nth-child(3){height:40%;animation-delay:.5s}
+@keyframes eqb{50%{transform:scaleY(.35)}}
+.cover{flex:none;font-size:.68rem;font-weight:700;color:#0b0e1a;background:linear-gradient(135deg,var(--accent),#fff 170%);border-radius:.7rem;padding:.7rem .4rem;text-align:center;min-width:3.6rem}
+.meta{display:contents}
+.titlerow{flex:1;min-width:0;display:flex;flex-wrap:wrap;align-items:center;gap:.35rem .6rem}
+.titlerow h3{margin:0}
+/* flex:none: el chip nunca se comprime; si el título no deja sitio, baja a
+   su propia línea (por eso .titlerow permite wrap). */
+.chip{flex:none;font-size:.72rem;font-weight:700;color:var(--accent);border:1px solid var(--accent);border-radius:2rem;padding:.1rem .6rem;white-space:nowrap}
+/* En móvil la frase fluye (la lección del bug: aquí no hay nowrap que
+   deshacer); el truncado a una línea es un lujo que se añade en desktop. */
+.freqs{flex:1 1 100%;margin:.25rem 0 0;font-size:.82rem;color:#9aa3c7}
+.detail{flex:1 1 100%;margin:.45rem 0 0;font-size:.86rem;color:#d6dbf2}
+.detail.dim{color:#9aa3c7}
+/* El "∞" de loop es decorativo: en móvil lo ahorramos. */
+.dur{display:none;font-size:1.6rem;color:var(--accent);opacity:.85}
+.about{margin-top:2rem;color:#c3c9e2;background:rgba(18,23,46,.45);border:1px solid rgba(255,255,255,.08);border-radius:1.1rem;padding:1.25rem 1.5rem}
+.about h2{margin:0 0 .5rem;font-size:1.05rem}
+.about ol{margin:0;padding-left:1.2rem;font-size:.9rem}
+.about li{margin-bottom:.5rem}
+.warn{background:rgba(110,59,77,.35);border:1px solid #6e3b4d;border-radius:.75rem;padding:.7rem 1rem;font-size:.85rem}
+footer{margin-top:1.5rem;color:#9aa3c7;font-size:.82rem;text-align:center}
+
+@media (min-width:641px){
+  .page{padding:1.5rem 1.25rem 10rem}
+  .phones{display:block}
+  /* Desktop: la tarjeta vuelve a ser una fila centrada clásica y recupera
+     el vidrio esmerilado (en pantallas grandes el repaint de scroll es
+     mucho menos frecuente y la GPU tiene margen). */
+  .track{align-items:center;gap:1rem;background:rgba(18,23,46,.55);backdrop-filter:blur(14px)}
+  .meta{display:block;min-width:0;flex:1}
+  .cover{min-width:4.6rem;padding:.85rem .6rem}
+  .freqs{flex:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .detail{flex:none}
+  .dur{display:inline}
+}

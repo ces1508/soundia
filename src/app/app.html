@@ -1,0 +1,153 @@
+<app-background></app-background>
+
+<div class="page">
+  <header class="brand">
+    <span class="logo" aria-hidden="true"><span></span><span></span><span></span></span>
+    <div>
+      <p class="wordmark">soundia</p>
+      <p class="tagline">canciones binaurales infinitas · 100% Web Audio API</p>
+    </div>
+    <p class="phones">🎧 Usa audífonos estéreo</p>
+  </header>
+
+  <section class="hero">
+    <h1>Sintoniza tu mente</h1>
+    <p>
+      Tres frecuencias generadas en vivo, en loop perfecto hasta que las
+      detengas. Sesión mínima sugerida: <strong>30:00</strong>.
+    </p>
+  </section>
+
+  <main class="playlist-wrap">
+    <div class="playlist-head">
+      <h2>Tu sesión</h2>
+      <span class="count">{{ tracks.length }} pistas · loop ∞</span>
+    </div>
+    <div class="goals" role="group" aria-label="Duración de la sesión">
+      <span>Auto-stop:</span>
+      @for (o of goalOptions; track o) {
+        <button
+          type="button"
+          [class.on]="goalMinutes() === o"
+          (click)="setGoal(o)"
+          [title]="o === null ? 'Suena hasta que la detengas' : 'Se detiene sola con fade-out al llegar'"
+        >
+          {{ o === null ? '∞' : o + ' min' }}
+        </button>
+      }
+    </div>
+
+    <ol class="playlist">
+      @for (t of tracks; track t.id; let i = $index) {
+        <li>
+          <article
+            class="track"
+            [class.active]="isActive(t.id)"
+            [style.--accent]="accent(t.id)"
+          >
+            <button
+              type="button"
+              class="playbtn"
+              (click)="toggle(t.id)"
+              [disabled]="engine.playback() === 'stopping'"
+              [attr.aria-label]="isActive(t.id) ? 'Detener ' + t.name : 'Escuchar ' + t.name"
+            >
+              @if (isActive(t.id)) {
+                <span class="eq" aria-hidden="true"><span></span><span></span><span></span></span>
+              } @else {
+                <span class="tri" aria-hidden="true"></span>
+              }
+            </button>
+
+            <span class="cover" aria-hidden="true">{{ t.band }}</span>
+
+            <div class="meta">
+              <div class="titlerow">
+                <h3>{{ t.name }}</h3>
+                <span class="chip">{{ t.beatHz }} Hz</span>
+              </div>
+              <p class="freqs">
+                {{ t.leftHz }} Hz izq · {{ t.rightHz }} Hz der · {{ t.use }}
+              </p>
+              @if (isActive(t.id)) {
+                <p class="detail">{{ t.blurb }}</p>
+                <p class="detail dim">{{ t.sessionNote }}</p>
+              }
+            </div>
+
+            <span class="dur" title="Loop infinito">∞</span>
+          </article>
+        </li>
+      }
+    </ol>
+  </main>
+
+  @defer (on viewport; hydrate on interaction; prefetch on idle)  {
+    <app-device-check />
+  } @placeholder {
+    <p>loading</p>
+  }
+
+  <section class="about">
+    <h2>Cómo funciona</h2>
+    <ol>
+      <li>
+        <strong>Dos tonos, un pulso fantasma.</strong> Cada oído recibe un seno
+        puro distinto; tu cerebro percibe la diferencia (p. ej. 210 − 200 =
+        10 Hz), que puede inducir <em>frequency-following response</em>.
+      </li>
+      <li><strong>10 Hz Alpha →</strong> concentración calmada y memoria de trabajo.</li>
+      <li><strong>6 Hz Theta →</strong> meditación profunda.</li>
+      <li>
+        <strong>40 Hz Gamma →</strong> inmersión profunda. Sin evidencia de una
+        "frecuencia DMT"; gamma es lo que la literatura vincula a meditación
+        avanzada. Empieza con sesiones cortas.
+      </li>
+    </ol>
+    <p class="warn">
+      ⚠️ Evidencia mixta y efectos modestos. Volumen moderado, no uses esto
+      manejando, y evita el entrenamiento auditivo rítmico si tienes epilepsia
+      o convulsiones. No es consejo médico.
+    </p>
+  </section>
+
+  <footer>
+    <p>soundia · sintetizado en vivo con Web Audio API · hecho con Angular</p>
+  </footer>
+</div>
+
+@if (engine.playback() !== 'idle' && engine.activeTrack) {
+  <div class="player" role="region" aria-label="Reproduciendo ahora">
+    <div class="p-viz"><app-visualizer></app-visualizer></div>
+    <div class="p-meta">
+      <strong>{{ engine.activeTrack?.name }}</strong>
+      <span>{{ engine.activeTrack?.band }} · {{ goalMinutes() === null ? 'loop ∞' : 'auto-stop ' + goalLabel() }}</span>
+    </div>
+    <div class="p-time">
+      <span class="clock">{{ elapsedLabel() }}</span>
+      <span class="goal">/ {{ goalLabel() }}</span>
+      @if (sessionDone()) {
+        <span class="done">✓ sesión completa</span>
+      }
+      <div class="bar"><div class="fill" [style.width.%]="progress() * 100"></div></div>
+    </div>
+    <label class="vol">
+      <span>Vol</span>
+      <input
+        type="range"
+        min="0"
+        max="100"
+        [value]="engine.volume() * 100"
+        (input)="onVolume($event)"
+      />
+    </label>
+    <button
+      type="button"
+      class="stopbtn"
+      (click)="toggle(engine.activeTrackId()!)"
+      [style.--accent]="accent(engine.activeTrackId()!)"
+    >
+      {{ engine.playback() === 'stopping' ? '…' : '⏹' }}
+    </button>
+  </div>
+}

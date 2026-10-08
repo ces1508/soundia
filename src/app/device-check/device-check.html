@@ -1,0 +1,185 @@
+<section class="devcheck" aria-label="Auriculares y comprobación estéreo">
+  <div class="dc-head">
+    <h2>Auriculares</h2>
+    <p class="dc-sub">
+      El pulso binaural existe gracias al aislamiento: cada oído debe recibir
+      su propia frecuencia para que tu cerebro genere la diferencia.
+    </p>
+  </div>
+
+  @switch (devices.headphoneState()) {
+    @case ('yes') {
+      <p class="dc-state ok">
+        🎧 Auriculares detectados. Todo listo para sesionar.
+      </p>
+    }
+    @case ('no') {
+      <p class="dc-state warn">
+        ⚠️ No detectamos auriculares. Este estado <strong>solo es posible con
+        auriculares estéreo</strong>: con altavoces ambos oídos escuchan los
+        dos tonos a la vez y el cerebro no puede generar la frecuencia
+        diferencial interna. Conéctalos y revisa de nuevo.
+      </p>
+      <button type="button" class="dc-mini" (click)="refresh()">
+        Revisar de nuevo
+      </button>
+    }
+    @default {
+      <p class="dc-state dim">
+        El navegador no permite leer los nombres de tus salidas de audio
+        (privacidad). Usa <strong>Elegir auriculares…</strong> para nombrarlos
+        o haz la comprobación guiada de abajo.
+      </p>
+    }
+  }
+
+  @if (devices.namedOutputs().length > 1) {
+    <div class="dc-list" role="group" aria-label="Salidas de audio disponibles">
+      @for (d of devices.namedOutputs(); track d.deviceId) {
+        <button
+          type="button"
+          class="dc-card"
+          [class.on]="devices.selectedId() === d.deviceId"
+          (click)="pick(d)"
+          [attr.aria-pressed]="devices.selectedId() === d.deviceId"
+        >
+          <span class="dc-icon" aria-hidden="true">
+            {{ d.headphone ? '🎧' : '🔊' }}
+          </span>
+          <span class="dc-name">{{ d.label }}</span>
+          <span class="dc-tags">
+            @if (d.isDefault) {
+              <span class="dc-tag">sistema</span>
+            }
+            @if (d.headphone) {
+              <span class="dc-tag hp">auriculares</span>
+            }
+          </span>
+        </button>
+      }
+    </div>
+    @if (devices.supportsSinkSelection) {
+      <p class="dc-hint">
+        Toca una tarjeta para dirigir el sonido a ese dispositivo, incluso con
+        la sesión ya en marcha.
+      </p>
+    } @else {
+      <p class="dc-hint">
+        Tu navegador no puede cambiar la salida por software: selecciona este
+        dispositivo como predeterminado en los ajustes de sonido del sistema.
+      </p>
+    }
+  }
+
+  @if (devices.supportsNativePicker) {
+    <button type="button" class="dc-choose" (click)="chooseNative()">
+      Elegir auriculares…
+    </button>
+  }
+
+  <div class="dc-check">
+    <h3>Comprobación guiada</h3>
+    @switch (step()) {
+      @case ('idle') {
+        <p>
+          Sonará un tono <strong>solo en tu oído izquierdo</strong> y luego
+          <strong>solo en el derecho</strong>. Si cada tono se escucha de un
+          solo lado, tus auriculares entregan los canales aislados y el
+          efecto binaural funcionará. Si no, hay algo que ajustar (mono del
+          sistema, balance, cable o códec).
+        </p>
+        <button
+          type="button"
+          class="dc-choose"
+          [disabled]="checking() || sessionBusy()"
+          (click)="startCheck()"
+        >
+          Comenzar comprobación
+        </button>
+        @if (sessionBusy()) {
+          <p class="dc-hint">Detén la sesión en curso para oír el test limpio.</p>
+        }
+      }
+      @case ('left') {
+        <p class="dc-playing">
+          <span class="pulse" aria-hidden="true"></span> Escucha… suena el oído
+          izquierdo
+        </p>
+      }
+      @case ('leftQ') {
+        <p>¿Lo escuchaste <strong>solo en el oído izquierdo</strong>?</p>
+        <div class="dc-answers">
+          <button type="button" class="dc-mini" (click)="answerLeft('only')">
+            Sí, solo a la izquierda
+          </button>
+          <button type="button" class="dc-mini" (click)="answerLeft('both')">
+            Se escuchó en ambos lados
+          </button>
+          <button type="button" class="dc-mini" (click)="answerLeft('none')">
+            No escuché nada
+          </button>
+        </div>
+      }
+      @case ('right') {
+        <p class="dc-playing">
+          <span class="pulse" aria-hidden="true"></span> Escucha… suena el oído
+          derecho
+        </p>
+      }
+      @case ('rightQ') {
+        <p>¿Ahora lo escuchaste <strong>solo en el oído derecho</strong>?</p>
+        <div class="dc-answers">
+          <button type="button" class="dc-mini" (click)="answerRight('only')">
+            Sí, solo a la derecha
+          </button>
+          <button type="button" class="dc-mini" (click)="answerRight('both')">
+            Se escuchó en ambos lados
+          </button>
+          <button type="button" class="dc-mini" (click)="answerRight('none')">
+            No escuché nada
+          </button>
+        </div>
+      }
+      @case ('ok') {
+        <p class="dc-state ok">
+          ✅ Comprobación superada: cada canal llega a su oído por separado.
+          El pulso fantasma que sintetiza tu cerebro tendrá el aislamiento
+          que necesita.
+        </p>
+        <button type="button" class="dc-mini" (click)="resetCheck()">
+          Repetir
+        </button>
+      }
+      @case ('fail') {
+        <div class="dc-state warn">
+          <p>❌ Los canales no están llegando aislados. Revisa, en orden:</p>
+          <ol>
+            <li>
+              Que sean <strong>auriculares estéreo</strong> (los mono o de un
+              solo oído no sirven).
+            </li>
+            <li>
+              <strong>Balance L/R y modo mono</strong> en los ajustes de
+              sonido o accesibilidad de tu sistema.
+            </li>
+            <li>
+              <strong>Bluetooth:</strong> si algo pidió el micrófono, el
+              audífono pudo saltar al perfil manos-libres (mono,
+              calidad telefónica). Desconéctalo y reconéctalo.
+            </li>
+            <li>Cable o adaptador: los adaptadores mono causan este síntoma.</li>
+          </ol>
+        </div>
+        <button type="button" class="dc-mini" (click)="resetCheck()">
+          Volver a intentar
+        </button>
+      }
+    }
+  </div>
+
+  <p class="dc-mic">
+    🔒 Garantía: soundia nunca pide el micrófono mientras escuchas. Todo el
+    audio es sintetizado en vivo; pedir el micro forzaría a tus auriculares
+    Bluetooth al perfil manos-libres (mono) y destruiría el efecto.
+  </p>
+</section>
