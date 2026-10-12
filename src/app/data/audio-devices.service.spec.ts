@@ -1,10 +1,11 @@
 import { TestBed } from '@angular/core/testing';
-import { AudioDevices, isHeadphoneLabel } from './audio-devices.service';
-import { BinauralEngine } from './binaural-engine.service';
+import { AUDIO_DEVICES, AUDIO_SYNTH, DATA_PROVIDERS } from './di';
+import { isHeadphoneLabel } from '../domain/model/device';
+import { OutputDevice } from '../domain/model/device';
 
 /**
  * Stub mínimo de navigator.mediaDevices. jsdom no lo implementa y el
- * servicio debe degradarse sin romper; aquí lo sustituimos para probar
+ * adaptador debe degradarse sin romper; aquí lo sustituimos para probar
  * los flujos reales. JAMÁS usamos getUserMedia en la app: el spy va
  * presente precisamente para demostrar que no se llama.
  */
@@ -34,7 +35,20 @@ function deviceInfo(
   } as MediaDeviceInfo;
 }
 
-describe('isHeadphoneLabel (heurística)', () => {
+function device(
+  id: string,
+  label: string,
+  headphone: boolean,
+): OutputDevice {
+  return { deviceId: id, label, isDefault: id === 'default', headphone };
+}
+
+// Los adaptadores ya no se auto-proveen: el wiring vive en DATA_PROVIDERS.
+beforeEach(() => {
+  TestBed.configureTestingModule({ providers: DATA_PROVIDERS });
+});
+
+describe('isHeadphoneLabel (regla de dominio)', () => {
   it('reconoce auriculares habituales', () => {
     expect(isHeadphoneLabel('AirPods Pro de Christian')).toBe(true);
     expect(isHeadphoneLabel('External Headphones')).toBe(true);
@@ -50,14 +64,14 @@ describe('isHeadphoneLabel (heurística)', () => {
   });
 });
 
-describe('AudioDevices', () => {
+describe('AudioDevices (adaptador del puerto)', () => {
   afterEach(() => {
     installMediaDevices(undefined);
   });
 
   it('degrada sin navigator.mediaDevices (SSR/jsdom)', async () => {
     installMediaDevices(undefined);
-    const svc = TestBed.inject(AudioDevices);
+    const svc = TestBed.inject(AUDIO_DEVICES);
     expect(() => svc.init()).not.toThrow();
     await expect(svc.refresh()).resolves.toBeUndefined();
     expect(svc.outputs()).toEqual([]);
@@ -93,7 +107,7 @@ describe('AudioDevices', () => {
       ],
       getUserMedia: vi.fn(),
     });
-    const svc = TestBed.inject(AudioDevices);
+    const svc = TestBed.inject(AUDIO_DEVICES);
     await svc.refresh();
     const ids = svc.outputs().map((d) => d.deviceId);
     expect(ids).not.toContain('communications');
@@ -119,7 +133,7 @@ describe('AudioDevices', () => {
       ],
       getUserMedia: vi.fn(),
     });
-    const svc = TestBed.inject(AudioDevices);
+    const svc = TestBed.inject(AUDIO_DEVICES);
     await svc.refresh();
     expect(svc.headphoneState()).toBe('no');
   });
@@ -132,7 +146,7 @@ describe('AudioDevices', () => {
       ],
       getUserMedia: vi.fn(),
     });
-    const svc = TestBed.inject(AudioDevices);
+    const svc = TestBed.inject(AUDIO_DEVICES);
     await svc.refresh();
     expect(svc.selectedId()).toBeNull();
     svc.pick(svc.outputs()[1]);
@@ -154,7 +168,7 @@ describe('AudioDevices', () => {
         }),
       getUserMedia: vi.fn(),
     });
-    const svc = TestBed.inject(AudioDevices);
+    const svc = TestBed.inject(AUDIO_DEVICES);
     await svc.refresh();
     expect(svc.headphoneState()).toBe('unknown'); // nombres ocultos
     await svc.chooseNative();
@@ -166,7 +180,7 @@ describe('AudioDevices', () => {
   });
 });
 
-describe('Garantía del micrófono', () => {
+describe('Garantía del micrófono (a través de los puertos)', () => {
   it('ningún flujo llama a getUserMedia', async () => {
     const gum = vi.fn();
     installMediaDevices({
@@ -179,8 +193,8 @@ describe('Garantía del micrófono', () => {
       addEventListener: () => undefined,
     });
 
-    const devices = TestBed.inject(AudioDevices);
-    const engine = TestBed.inject(BinauralEngine);
+    const devices = TestBed.inject(AUDIO_DEVICES);
+    const engine = TestBed.inject(AUDIO_SYNTH);
 
     devices.init(); // devicechange listener
     await devices.refresh();

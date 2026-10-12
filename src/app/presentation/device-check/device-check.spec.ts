@@ -1,5 +1,13 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { AudioDevices, OutputDevice } from '../audio-devices.service';
+import { AudioDevicesPort } from '../../domain/ports/audio-devices.port';
+import { AUDIO_DEVICES, DATA_PROVIDERS } from '../../data/di';
+import { OutputDevice } from '../../domain/model/device';
+import { Signal, WritableSignal } from '@angular/core';
+
+/** El puerto es de solo lectura; para sembrar estado de test elevamos a writable. */
+function seedOutputs(devices: { readonly outputs: Signal<OutputDevice[]> }, list: OutputDevice[]): void {
+  (devices.outputs as WritableSignal<OutputDevice[]>).set(list);
+}
 import { DeviceCheck } from './device-check';
 
 function device(
@@ -12,13 +20,13 @@ function device(
 
 describe('DeviceCheck', () => {
   let fixture: ComponentFixture<DeviceCheck>;
-  let devices: AudioDevices;
+  let devices: AudioDevicesPort;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [DeviceCheck],
+      imports: [DeviceCheck], providers: [DATA_PROVIDERS],
     }).compileComponents();
-    devices = TestBed.inject(AudioDevices);
+    devices = TestBed.inject(AUDIO_DEVICES);
     fixture = TestBed.createComponent(DeviceCheck);
   });
 
@@ -29,7 +37,7 @@ describe('DeviceCheck', () => {
   });
 
   it('advierte que el estado solo es posible con auriculares si no los detecta', () => {
-    devices.outputs.set([device('spk', 'MacBook Pro Speakers', false)]);
+    seedOutputs(devices, [device('spk', 'MacBook Pro Speakers', false)]);
     fixture.detectChanges();
     const el = fixture.nativeElement as HTMLElement;
     expect(el.querySelector('.dc-state.warn')?.textContent).toContain(
@@ -40,14 +48,14 @@ describe('DeviceCheck', () => {
   });
 
   it('confirma cuando detecta auriculares por etiqueta', () => {
-    devices.outputs.set([device('bt', 'AirPods Pro', true)]);
+    seedOutputs(devices, [device('bt', 'AirPods Pro', true)]);
     fixture.detectChanges();
     const el = fixture.nativeElement as HTMLElement;
     expect(el.querySelector('.dc-state.ok')).toBeTruthy();
   });
 
   it('lista tarjetas (sin <select>) con estado activo y elige al tocarlas', () => {
-    devices.outputs.set([
+    seedOutputs(devices, [
       device('bt', 'AirPods Pro', true),
       device('spk', 'MacBook Pro Speakers', false),
     ]);

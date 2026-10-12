@@ -1,14 +1,10 @@
-import { Injectable, inject, signal } from '@angular/core';
-import { AudioDevices } from './audio-devices.service';
-import { TRACKS, TrackConfig } from './tracks';
-
-export type PlaybackState = 'idle' | 'playing' | 'stopping';
-
-/** Oído destino del tono de comprobación guiada. */
-export type TestSide = 'left' | 'right';
+import { Injectable, signal } from '@angular/core';
+import { AudioSynthPort } from '../domain/ports/audio-synth.port';
+import { PlaybackState, TestSide } from '../domain/model/playback';
+import { TRACKS_BY_ID, TrackConfig, getTrackById } from '../domain/model/tracks';
 
 /**
- * Motor de audio 100% Web Audio API (sin archivos de sonido).
+ * DATA · Adaptador del puerto `AudioSynthPort` sobre Web Audio API.
  *
  * Por pista construye:
  * 1. Par binaural: dos osciladores seno (uno por oído) unidos con
@@ -18,14 +14,16 @@ export type TestSide = 'left' | 'right';
  *    planificador lookahead (sin cortes, dura hasta que pares).
  * 3. Respiración: LFO lento sobre el colchón + fade-in/out suaves.
  * 4. (Opcional por pista) shimmer de octava o ruido filtrado.
+ *
+ * Dependency rule: este adaptador conoce el PUERTO (contrato de dominio),
+ * pero la presentación es quien orquesta — el sink activo llega por
+ * parámetro; aquí no se sabe qué dispositivo eligió el usuario.
  */
-@Injectable({ providedIn: 'root' })
-export class BinauralEngine {
+@Injectable()
+export class BinauralEngine implements AudioSynthPort {
   readonly playback = signal<PlaybackState>('idle');
   readonly activeTrackId = signal<string | null>(null);
   readonly volume = signal(0.7);
-
-  private readonly devices = inject(AudioDevices);
 
   private ctx: AudioContext | null = null;
   private master: GainNode | null = null;
@@ -35,13 +33,14 @@ export class BinauralEngine {
   private analyser: AnalyserNode | null = null;
 
   get activeTrack(): TrackConfig | undefined {
-    return TRACKS.find((t) => t.id === this.activeTrackId());
+    const id = this.activeTrackId();
+    return id ? TRACKS_BY_ID.get(id) : undefined;
   }
 
   /** Inicia una pista. Debe llamarse desde un gesto del usuario (click). */
   start(trackId: string): void {
     if (typeof window === 'undefined') return;
-    const track = TRACKS.find((t) => t.id === trackId);
+    const track = getTrackById(trackId);
     if (!track) return;
     if (this.playback() === 'playing' && this.activeTrackId() === trackId) return;
 
@@ -55,8 +54,6 @@ export class BinauralEngine {
     const ctx = new Ctor();
     void ctx.resume();
     this.ctx = ctx;
-    // Enruta la salida al dispositivo elegido (si el navegador lo permite).
-    void this.applySink(ctx);
 
     // --- Bus maestro con fade-in de 5 s ---
     const master = ctx.createGain();
@@ -83,11 +80,40 @@ export class BinauralEngine {
     this.playback.set('playing');
   }
 
+  /**
+   * PAUSA REAL del grafo de audio: `AudioContext.suspend()` congela el
+   * reloj del contexto sin destruir nodos — reanudar continúa exactamente
+   * donde iba la sesión (fases, acordes, fades).
+   */
+  pause(): void {
+    const ctx = this.ctx;
+    if (!ctx || this.playback() !== 'playing') return;
+    void ctx.suspend();
+    this.playback.set('paused');
+  }
+
+  resume(): void {
+    const ctx = this.ctx;
+    if (!ctx || this.playback() !== 'paused') return;
+    void ctx.resume();
+    this.playback.set('playing');
+  }
+
   /** Para con fade-out de 2 s y libera el contexto. */
   stop(): void {
     const ctx = this.ctx;
     const master = this.master;
-    if (!ctx || !master || this.playback() !== 'playing') {
+    if (!ctx || !master) {
+      this.teardownNow();
+      return;
+    }
+    // Desde pausa el contexto está suspendido (silencio garantizado):
+    // el fade-out no tendría audible; teardown directo.
+    if (this.playback() === 'paused') {
+      this.teardownNow();
+      return;
+    }
+    if (this.playback() !== 'playing') {
       this.teardownNow();
       return;
     }
@@ -110,20 +136,28 @@ export class BinauralEngine {
   }
 
   /**
-   * Enruta el AudioContext al dispositivo elegido con `AudioContext.setSinkId`
-   * (parte de la spec de Web Audio; Chromium lo implementa). Si el navegador
-   * no lo soporta o el dispositivo se desconectó, no rompe nada: la salida
-   * sigue por el sink por defecto del sistema. Con `null` vuelve al sink
-   * por defecto ('' = default en la spec).
+   * Enruta el AudioContext actual al deviceId indicado con
+   * `AudioContext.setSinkId` (spec Web Audio; Chromium lo implementa).
+   * Si el navegador no lo soporta o el dispositivo se desconectó, no
+   * rompe nada: la salida sigue por el sink por defecto del sistema.
+   * `null`/omitido = sink por defecto ('' = default en la spec).
    */
-  async applySink(ctx: AudioContext | null = this.ctx): Promise<void> {
+  async applySink(deviceId?: string | null): Promise<void> {
+    const ctx = this.ctx;
     if (!ctx) return;
+    await this.applySinkTo(ctx, deviceId);
+  }
+
+  private async applySinkTo(
+    ctx: AudioContext,
+    deviceId?: string | null,
+  ): Promise<void> {
     const sinkable = ctx as AudioContext & {
       setSinkId?: (sinkId: string) => Promise<void>;
     };
     if (typeof sinkable.setSinkId !== 'function') return;
     try {
-      await sinkable.setSinkId(this.devices.selectedId() ?? '');
+      await sinkable.setSinkId(deviceId ?? '');
     } catch {
       /* dispositivo desconectado o sin permiso: sink por defecto */
     }
@@ -135,7 +169,10 @@ export class BinauralEngine {
    * Crea un AudioContext efímero y lo cierra al terminar. Resuelve cuando
    * el tono ya terminó, para que la UI pregunte al usuario qué oyó.
    */
-  async playSideTest(side: TestSide): Promise<void> {
+  async playSideTest(
+    side: TestSide,
+    deviceId?: string | null,
+  ): Promise<void> {
     if (typeof window === 'undefined') return;
     const Ctor =
       window.AudioContext ??
@@ -144,7 +181,7 @@ export class BinauralEngine {
     if (!Ctor) return;
     const ctx = new Ctor();
     void ctx.resume();
-    await this.applySink(ctx);
+    await this.applySinkTo(ctx, deviceId);
 
     const merger = ctx.createChannelMerger(2);
     merger.connect(ctx.destination);

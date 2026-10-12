@@ -1,7 +1,13 @@
 import { Injectable, computed, signal } from '@angular/core';
+import { AudioDevicesPort } from '../domain/ports/audio-devices.port';
+import {
+  HeadphoneState,
+  OutputDevice,
+  isHeadphoneLabel,
+} from '../domain/model/device';
 
 /**
- * Dispositivo de salida de audio tal como lo expone el navegador.
+ * DATA · Adaptador del puerto `AudioDevicesPort` sobre `navigator.mediaDevices`.
  *
  * `label` puede llegar vacío: por privacidad, los navegadores ocultan los
  * nombres de los dispositivos si el usuario no concedió permiso de
@@ -11,21 +17,11 @@ import { Injectable, computed, signal } from '@angular/core';
  * usuario) o mostrando el estado "desconocido" y ofreciendo la
  * comprobación guiada por oído.
  */
-export interface OutputDevice {
-  deviceId: string;
-  label: string;
-  /** true si es la salida por defecto del sistema (deviceId 'default'). */
-  isDefault: boolean;
-  /** Heurística de etiqueta: ¿parecen auriculares? */
-  headphone: boolean;
-}
-
-export type HeadphoneState = 'yes' | 'no' | 'unknown';
 
 /**
  * Detección y selección de salidas de audio.
  *
- * GARANTÍA DEL MICRÓFONO: este servicio (y todo soundia) no llama nunca a
+ * GARANTÍA DEL MICRÓFONO: este adaptador (y todo soundia) no llama nunca a
  * `navigator.mediaDevices.getUserMedia`. Motivos: 1) no lo necesitamos,
  * todo el audio es sintetizado con Web Audio API; 2) pedir el micro hace
  * que muchos auriculares Bluetooth salten del perfil A2DP (estéreo) al
@@ -33,8 +29,8 @@ export type HeadphoneState = 'yes' | 'no' | 'unknown';
  * el aislamiento L/R que sostiene el efecto binaural. Hay un test que
  * verifica que getUserMedia no se invoca en ningún flujo.
  */
-@Injectable({ providedIn: 'root' })
-export class AudioDevices {
+@Injectable()
+export class AudioDevices implements AudioDevicesPort {
   readonly outputs = signal<OutputDevice[]>([]);
 
   /** deviceId elegido por el usuario; null = usar la salida por defecto del sistema. */
@@ -147,16 +143,4 @@ export class AudioDevices {
       /* cancelado o falla del navegador: seguimos con el estado previo */
     }
   }
-}
-
-/**
- * Heurística de etiquetas: marcadores habituales de auriculares en
- * macOS ("AirPods Pro", "External Headphones"), Windows ("Headphones
- * (Realtek...)") y Linux ("cascos", "auriculares"). Los altavoces
- * ("Speakers", "MacBook Pro Speakers") no coinciden.
- */
-export function isHeadphoneLabel(label: string): boolean {
-  return /airpod|headphone|headset|earbuds?|earphones?|buds|auricular|cascos?|aud[ií]fonos?|diadema/i.test(
-    label,
-  );
 }

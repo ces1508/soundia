@@ -13,7 +13,7 @@
   <section class="hero">
     <h1>Sintoniza tu mente</h1>
     <p>
-      Tres frecuencias generadas en vivo, en loop perfecto hasta que las
+      Cuatro frecuencias generadas en vivo, en loop perfecto hasta que las
       detengas. Sesión mínima sugerida: <strong>30:00</strong>.
     </p>
   </section>
@@ -50,9 +50,13 @@
               class="playbtn"
               (click)="toggle(t.id)"
               [disabled]="engine.playback() === 'stopping'"
-              [attr.aria-label]="isActive(t.id) ? 'Detener ' + t.name : 'Escuchar ' + t.name"
+              [attr.aria-label]="
+                isActive(t.id)
+                  ? (isPlaying() ? 'Pausar ' + t.name : 'Reanudar ' + t.name)
+                  : 'Escuchar ' + t.name
+              "
             >
-              @if (isActive(t.id)) {
+              @if (isActive(t.id) && isPlaying()) {
                 <span class="eq" aria-hidden="true"><span></span><span></span><span></span></span>
               } @else {
                 <span class="tri" aria-hidden="true"></span>
@@ -121,7 +125,7 @@
     <div class="p-viz"><app-visualizer></app-visualizer></div>
     <div class="p-meta">
       <strong>{{ engine.activeTrack?.name }}</strong>
-      <span>{{ engine.activeTrack?.band }} · {{ goalMinutes() === null ? 'loop ∞' : 'auto-stop ' + goalLabel() }}</span>
+      <span>{{ engine.activeTrack?.band }} · {{ engine.playback() === 'paused' ? 'en pausa · ' : '' }}{{ goalMinutes() === null ? 'loop ∞' : 'auto-stop ' + goalLabel() }}</span>
     </div>
     <div class="p-time">
       <span class="clock">{{ elapsedLabel() }}</span>
@@ -144,7 +148,8 @@
     <button
       type="button"
       class="stopbtn"
-      (click)="toggle(engine.activeTrackId()!)"
+      (click)="stopSession()"
+      [attr.aria-label]="'Detener ' + engine.activeTrack?.name"
       [style.--accent]="accent(engine.activeTrackId()!)"
     >
       {{ engine.playback() === 'stopping' ? '…' : '⏹' }}

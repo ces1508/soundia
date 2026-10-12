@@ -6,7 +6,7 @@ import {
   OnDestroy,
   viewChild,
 } from '@angular/core';
-import { BinauralEngine } from '../binaural-engine.service';
+import { AUDIO_SYNTH } from '../../data/di';
 
 const BARS = 56;
 
@@ -17,7 +17,7 @@ const BARS = 56;
   templateUrl: './visualizer.html',
 })
 export class Visualizer implements AfterViewInit, OnDestroy {
-  private readonly engine = inject(BinauralEngine);
+  private readonly engine = inject(AUDIO_SYNTH);
   private readonly canvasRef =
     viewChild<ElementRef<HTMLCanvasElement>>('bars');
 
