@@ -85,6 +85,29 @@ export const TRACKS: TrackConfig[] = [
     ],
   }),
   define({
+    id: 'calm',
+    name: 'Calma Alpha',
+    band: 'Alpha · 9 Hz',
+    beatHz: 9,
+    carrierHz: 190,
+    blurb:
+      'Pulso binaural de 9 Hz (alpha bajo) sobre base de 190 Hz. El borde relajado de la banda alpha (8–12 Hz): calma con atención interna, el territorio entre alerta y meditación.',
+    use: 'Respiración, bajar revoluciones, soltar tensión, transición hacia el sueño.',
+    sessionNote: 'Sesión sugerida: 20–30 min. Ojos cerrados amplifica el efecto.',
+    padType: 'sine',
+    padLevel: 0.06,
+    chordSeconds: 25,
+    shimmer: false,
+    noise: true,
+    // Pentatónica de La menor — abierta y flotante
+    progression: [
+      [110.0, 130.81, 164.81, 220.0],
+      [87.31, 110.0, 164.81],
+      [98.0, 146.83, 196.0],
+      [123.47, 164.81, 246.94],
+    ],
+  }),
+  define({
     id: 'meditation',
     name: 'Meditación Theta',
     band: 'Theta · 6 Hz',
@@ -133,3 +156,15 @@ export const TRACKS: TrackConfig[] = [
     ],
   }),
 ];
+
+/**
+ * Índice por id: lookup O(1) para el motor y el player. El array TRACKS
+ * conserva el orden de la playlist; el Map es la fachada de consulta.
+ */
+export const TRACKS_BY_ID: ReadonlyMap<string, TrackConfig> = new Map(
+  TRACKS.map((t) => [t.id, t]),
+);
+
+export function getTrackById(id: string): TrackConfig | undefined {
+  return TRACKS_BY_ID.get(id);
+}

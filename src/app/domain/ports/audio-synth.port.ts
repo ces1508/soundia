@@ -24,6 +24,10 @@ export interface AudioSynthPort {
 
   /** Inicia una pista. Debe invocarse desde un gesto del usuario. */
   start(trackId: string): void;
+  /** Pausa el grafo de audio (suspend): congelar sin destruir. */
+  pause(): void;
+  /** Reanuda desde pausa (resume del contexto). */
+  resume(): void;
   /** Detiene con fade-out y libera recursos. */
   stop(): void;
   setVolume(value: number): void;

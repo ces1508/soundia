@@ -1,7 +1,7 @@
 import { Injectable, signal } from '@angular/core';
 import { AudioSynthPort } from '../domain/ports/audio-synth.port';
 import { PlaybackState, TestSide } from '../domain/model/playback';
-import { TRACKS, TrackConfig } from '../domain/model/tracks';
+import { TRACKS_BY_ID, TrackConfig, getTrackById } from '../domain/model/tracks';
 
 /**
  * DATA · Adaptador del puerto `AudioSynthPort` sobre Web Audio API.
@@ -33,13 +33,14 @@ export class BinauralEngine implements AudioSynthPort {
   private analyser: AnalyserNode | null = null;
 
   get activeTrack(): TrackConfig | undefined {
-    return TRACKS.find((t) => t.id === this.activeTrackId());
+    const id = this.activeTrackId();
+    return id ? TRACKS_BY_ID.get(id) : undefined;
   }
 
   /** Inicia una pista. Debe llamarse desde un gesto del usuario (click). */
   start(trackId: string): void {
     if (typeof window === 'undefined') return;
-    const track = TRACKS.find((t) => t.id === trackId);
+    const track = getTrackById(trackId);
     if (!track) return;
     if (this.playback() === 'playing' && this.activeTrackId() === trackId) return;
 
@@ -79,11 +80,40 @@ export class BinauralEngine implements AudioSynthPort {
     this.playback.set('playing');
   }
 
+  /**
+   * PAUSA REAL del grafo de audio: `AudioContext.suspend()` congela el
+   * reloj del contexto sin destruir nodos — reanudar continúa exactamente
+   * donde iba la sesión (fases, acordes, fades).
+   */
+  pause(): void {
+    const ctx = this.ctx;
+    if (!ctx || this.playback() !== 'playing') return;
+    void ctx.suspend();
+    this.playback.set('paused');
+  }
+
+  resume(): void {
+    const ctx = this.ctx;
+    if (!ctx || this.playback() !== 'paused') return;
+    void ctx.resume();
+    this.playback.set('playing');
+  }
+
   /** Para con fade-out de 2 s y libera el contexto. */
   stop(): void {
     const ctx = this.ctx;
     const master = this.master;
-    if (!ctx || !master || this.playback() !== 'playing') {
+    if (!ctx || !master) {
+      this.teardownNow();
+      return;
+    }
+    // Desde pausa el contexto está suspendido (silencio garantizado):
+    // el fade-out no tendría audible; teardown directo.
+    if (this.playback() === 'paused') {
+      this.teardownNow();
+      return;
+    }
+    if (this.playback() !== 'playing') {
       this.teardownNow();
       return;
     }

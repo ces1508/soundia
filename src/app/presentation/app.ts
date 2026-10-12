@@ -1,10 +1,18 @@
-import { Component, computed, inject, OnDestroy, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  effect,
+  inject,
+  OnDestroy,
+  signal,
+  untracked,
+} from '@angular/core';
 import {
   AUDIO_DEVICES,
   AUDIO_SYNTH,
+  MEDIA_CONTROLS,
 } from '../data/di';
 import {
-  MIN_SESSION_SECONDS,
   SESSION_GOAL_OPTIONS,
   SessionGoalMinutes,
   resolveGoalSeconds,
@@ -18,6 +26,7 @@ import { DeviceCheck } from './device-check/device-check';
 /** Acento de color por pista (orb de portada, brillos, ecualizador). */
 const ACCENTS: Record<string, string> = {
   focus: '#7c8cff',
+  calm: '#ffc857',
   meditation: '#4fe0c3',
   deep: '#ff6ad5',
 };
@@ -26,9 +35,10 @@ const ACCENTS: Record<string, string> = {
  * PRESENTACIÓN · Playlist + player.
  *
  * No conoce Web Audio ni MediaDevices: habla con los PUERTOS del dominio
- * (`AUDIO_SYNTH`, `AUDIO_DEVICES`) y aquí vive la única orquestación
- * entre adaptadores — tras iniciar sesión o elegir dispositivo, enruta
- * el sink que el usuario haya seleccionado.
+ * (`AUDIO_SYNTH`, `AUDIO_DEVICES`, `MEDIA_CONTROLS`) y orquesta:
+ * - al iniciar sesión o elegir dispositivo → enruta el sink elegido;
+ * - al cambiar el estado de reproducción → congela/reanuda el reloj de
+ *   sesión y sincroniza metadata/posición con los controles del SO.
  */
 @Component({
   selector: 'app-root',
@@ -41,6 +51,8 @@ export class App implements OnDestroy {
   protected readonly engine = inject(AUDIO_SYNTH);
   /** Puerto de dispositivos (implementado por el adaptador de MediaDevices). */
   protected readonly devices = inject(AUDIO_DEVICES);
+  /** Puerto de controles del sistema (Media Session API). */
+  protected readonly media = inject(MEDIA_CONTROLS);
   protected readonly tracks = TRACKS;
 
   /** Duración objetivo en minutos; null = sin límite (hasta que pares). */
@@ -67,24 +79,44 @@ export class App implements OnDestroy {
 
   private timer: ReturnType<typeof setInterval> | null = null;
   private startedAt = 0;
+  private clockFrozen = false;
+
+  constructor() {
+    // Controles del sistema: pausa/reanudar/parar y salto de pista desde
+    // teclas multimedia, auriculares Bluetooth y el panel del OS.
+    this.media.init({
+      onResume: () => this.engine.resume(),
+      onPause: () => this.engine.pause(),
+      onStop: () => {
+        this.engine.stop();
+        this.freezeClock();
+      },
+      onPrevious: () => this.skip(-1),
+      onNext: () => this.skip(1),
+    });
+
+    // Reacción al estado de reproducción: el reloj se congela en pausa y
+    // los controles del sistema siempre ven la verdad de la sesión.
+    effect(() => {
+      const state = this.engine.playback();
+      const track = this.engine.activeTrack;
+
+      if (state === 'paused' && !this.clockFrozen) this.freezeClock();
+      if (state === 'playing' && this.clockFrozen) this.thawClock();
+
+      if (track && state !== 'idle') {
+        this.media.sync({
+          track,
+          isPlaying: state === 'playing',
+          durationSec: this.goalSeconds(),
+          positionSec: untracked(() => this.elapsed()),
+        });
+      }
+    });
+  }
 
   protected accent(trackId: string): string {
     return ACCENTS[trackId] ?? '#7c8cff';
-  }
-
-  protected toggle(trackId: string): void {
-    const playingThis =
-      this.engine.playback() === 'playing' &&
-      this.engine.activeTrackId() === trackId;
-    if (playingThis) {
-      this.engine.stop();
-      this.stopClock();
-    } else {
-      this.engine.start(trackId);
-      // Orquestación presentación: la sesión nace en el sink elegido.
-      void this.engine.applySink(this.devices.selectedId());
-      this.startClock();
-    }
   }
 
   protected isActive(trackId: string): boolean {
@@ -92,6 +124,43 @@ export class App implements OnDestroy {
       this.engine.playback() !== 'idle' &&
       this.engine.activeTrackId() === trackId
     );
+  }
+
+  protected isPlaying(): boolean {
+    return this.engine.playback() === 'playing';
+  }
+
+  /**
+   * Botón principal de la pista: arranca, o alterna pausa/reanudar si ya
+   * es la pista activa. El STOP completo vive en el botón ⏹ del player.
+   */
+  protected toggle(trackId: string): void {
+    if (!this.isActive(trackId)) {
+      this.startTrack(trackId);
+      return;
+    }
+    if (this.isPlaying()) {
+      this.engine.pause();
+      this.freezeClock();
+    } else {
+      this.engine.resume();
+      this.thawClock();
+    }
+  }
+
+  /** ⏹ del player: detener de verdad (fade-out + teardown). */
+  protected stopSession(): void {
+    this.engine.stop();
+    this.freezeClock();
+  }
+
+  /** Salta a la pista siguiente/anterior respetando el orden de la playlist. */
+  protected skip(direction: 1 | -1): void {
+    const ids = TRACKS.map((t) => t.id);
+    const current = this.engine.activeTrackId() ?? ids[0];
+    const idx = ids.indexOf(current);
+    const next = ids[(idx + direction + ids.length) % ids.length];
+    this.startTrack(next);
   }
 
   protected onVolume(event: Event): void {
@@ -108,10 +177,35 @@ export class App implements OnDestroy {
     this.engine.stop();
   }
 
+  private startTrack(trackId: string): void {
+    this.engine.start(trackId);
+    // Orquestación presentación: la sesión nace en el sink elegido.
+    void this.engine.applySink(this.devices.selectedId());
+    this.startClock();
+  }
+
   private startClock(): void {
     this.stopClock();
     this.startedAt = Date.now();
     this.elapsed.set(0);
+    this.clockFrozen = false;
+    this.runClock();
+  }
+
+  /** Reanuda el reloj conservando el tiempo ya escuchado. */
+  private thawClock(): void {
+    this.stopClock();
+    this.startedAt = Date.now() - this.elapsed() * 1000;
+    this.runClock();
+  }
+
+  /** Congela sin perder el acumulado (pausa = no cuenta tiempo de sesión). */
+  private freezeClock(): void {
+    this.stopClock();
+    this.clockFrozen = true;
+  }
+
+  private runClock(): void {
     if (typeof window === 'undefined') return;
     this.timer = setInterval(() => {
       const s = Math.floor((Date.now() - this.startedAt) / 1000);
@@ -120,7 +214,7 @@ export class App implements OnDestroy {
       const goal = this.goalSeconds();
       if (goal !== null && s >= goal) {
         this.engine.stop();
-        this.stopClock();
+        this.freezeClock();
       }
     }, 500);
   }

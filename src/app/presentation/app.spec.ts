@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { App } from './app';
 import { AUDIO_SYNTH, DATA_PROVIDERS } from '../data/di';
 import { MIN_SESSION_SECONDS } from '../domain/model/session';
-import { TRACKS } from '../domain/model/tracks';
+import { TRACKS, TRACKS_BY_ID, getTrackById } from '../domain/model/tracks';
 
 describe('App', () => {
   beforeEach(async () => {
@@ -21,7 +21,7 @@ describe('App', () => {
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelectorAll('.playlist .track').length).toBe(3);
+    expect(compiled.querySelectorAll('.playlist .track').length).toBe(4);
     expect(compiled.querySelector('h1')?.textContent).toContain('Sintoniza');
   });
 
@@ -51,8 +51,26 @@ describe('App', () => {
 });
 
 describe('Tracks', () => {
-  it('defines the 3 researched sessions', () => {
-    expect(TRACKS.map((t) => t.beatHz)).toEqual([10, 6, 40]);
+  it('defines the 4 researched sessions', () => {
+    expect(TRACKS.map((t) => t.beatHz)).toEqual([10, 9, 6, 40]);
+  });
+
+  it('expone un índice O(1) coherente con el catálogo', () => {
+    expect(TRACKS_BY_ID.size).toBe(TRACKS.length);
+    for (const t of TRACKS) {
+      expect(TRACKS_BY_ID.get(t.id)).toBe(t);
+      expect(getTrackById(t.id)).toBe(t);
+    }
+    expect(getTrackById('no-existe')).toBeUndefined();
+  });
+
+  it('cada pista alpha cubre un borde distinto de la banda 8-12 Hz', () => {
+    const alphas = TRACKS.filter((t) => t.band.includes('Alpha'));
+    expect(alphas.map((a) => a.beatHz)).toEqual([10, 9]); // alta alerta / baja calma
+    for (const a of alphas) {
+      expect(a.beatHz).toBeGreaterThanOrEqual(8);
+      expect(a.beatHz).toBeLessThanOrEqual(12);
+    }
   });
 
   it('keeps left/right tones symmetric around the carrier', () => {
