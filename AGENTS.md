@@ -39,4 +39,5 @@ npm run build      # build producción a dist/soundia
 - El `FAQPage` JSON-LD debe espejar EXACTAMENTE la sección visible "Preguntas frecuentes" de `app.html` (Google penaliza schema con contenido no visible). Preguntas en acordeón `details/summary` (indexable sin JS).
 - `public/`: `robots.txt`, `sitemap.xml`, `manifest.webmanifest` (start_url `/soundia/`) e imágenes (`og-image.png` 1200×630, `icon-192/512.png`, `apple-touch-icon.png`). Las imágenes se generaron renderizando HTML temporal con navegador headless (screenshots viewport); para regenerarlas o rediseñarlas, misma técnica.
 - hreflang NO se añade hasta que exista la versión `/en/`. `index.csr.html` que genera el builder es el fallback CSR, no se edita.
+- Deploy: `npm run build:pages` (base-href `/soundia/` + genera `404.html` como copia del index — GitHub Pages lo sirve en URLs desconocidas; NUNCA omitirlo del upload) y subir `dist/soundia/browser/` a la rama `gh-pages` conservando `.nojekyll`.
 - Post-deploy pendiente (manual): verificar en Google Search Console + Bing Webmaster, enviar sitemap. Para AdSense: dominio propio recomendado + `ads.txt` tras aprobación.
