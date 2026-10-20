@@ -1,0 +1,28 @@
+{
+  "name": "Soundia — Ondas binaurales online",
+  "short_name": "Soundia",
+  "description": "Ondas binaurales gratis generadas en vivo en tu navegador: Alpha, Theta y Gamma para concentrarte, relajarte y meditar.",
+  "id": "/soundia/",
+  "start_url": "/soundia/",
+  "scope": "/soundia/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0b0e1a",
+  "theme_color": "#0b0e1a",
+  "lang": "es",
+  "categories": ["health", "lifestyle", "music"],
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

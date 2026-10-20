@@ -1,11 +1,132 @@
 <!doctype html>
-<html lang="en">
+<html lang="es">
   <head>
     <meta charset="utf-8" />
-    <title>Soundia</title>
+    <title>Ondas binaurales gratis online: concentración y calma | Soundia</title>
     <base href="/" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Ondas binaurales gratis en tu navegador, sin registro ni descargas. Sesiones de Alpha, Theta y Gamma para concentrarte, relajarte y meditar con tus audífonos."
+    />
+    <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#0b0e1a" />
+    <link rel="canonical" href="https://ces1508.github.io/soundia/" />
+    <!-- Bilingüe a futuro: cuando exista /en/, añadir aquí los <link rel="alternate" hreflang> -->
+
     <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <link rel="manifest" href="manifest.webmanifest" />
+
+    <!-- Open Graph (WhatsApp, Facebook, LinkedIn, Discord…) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Soundia" />
+    <meta property="og:url" content="https://ces1508.github.io/soundia/" />
+    <meta property="og:title" content="Ondas binaurales gratis online: concentración y calma | Soundia" />
+    <meta
+      property="og:description"
+      content="Sesiones de Alpha, Theta y Gamma generadas en vivo en tu navegador. Sin registro, sin descargas: solo audífonos."
+    />
+    <meta property="og:image" content="https://ces1508.github.io/soundia/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Soundia: reproductor de ondas binaurales gratis en el navegador" />
+    <meta property="og:locale" content="es_ES" />
+
+    <!-- Twitter/X -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Ondas binaurales gratis online: concentración y calma | Soundia" />
+    <meta
+      name="twitter:description"
+      content="Sesiones de Alpha, Theta y Gamma generadas en vivo en tu navegador. Sin registro, sin descargas: solo audífonos."
+    />
+    <meta name="twitter:image" content="https://ces1508.github.io/soundia/og-image.png" />
+
+    <!-- Datos estructurados: la app como producto web gratuito -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Soundia",
+        "url": "https://ces1508.github.io/soundia/",
+        "applicationCategory": "HealthApplication",
+        "operatingSystem": "Web",
+        "browserRequirements": "Requiere un navegador con Web Audio API",
+        "inLanguage": "es",
+        "description": "Reproductor de ondas binaurales gratis que genera Alpha, Theta y Gamma en vivo con la Web Audio API. Sin registro ni descargas.",
+        "featureList": [
+          "Ondas binaurales Alpha de 10 Hz y 9 Hz para concentración y calma",
+          "Ondas Theta de 6 Hz para meditación profunda",
+          "Ondas Gamma de 40 Hz para inmersión",
+          "Loop infinito y auto-stop de 10 a 60 minutos con fade-out",
+          "Comprobación guiada de auriculares estéreo",
+          "Síntesis en vivo con Web Audio API, sin archivos de audio"
+        ],
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        }
+      }
+    </script>
+
+    <!-- FAQ: mismo contenido que la sección visible "Preguntas frecuentes" -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "¿Qué son las ondas binaurales?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Son el pulso que percibe tu cerebro cuando cada oído recibe un tono puro de frecuencia ligeramente distinta (por ejemplo, 200 Hz en un oído y 210 Hz en el otro): la diferencia de 10 Hz se escucha como un ritmo suave que puede acompañar tu estado de atención, un fenómeno llamado frequency-following response."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "¿Necesito audífonos para escuchar ondas binaurales?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Sí. El efecto binaural depende de que cada oído reciba su propia frecuencia aislada. Con altavoces los dos tonos se mezclan en el aire y el pulso desaparece. Cualquier auricular estéreo sirve, y Soundia incluye una comprobación guiada para verificar que tus canales izquierdo y derecho están aislados."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "¿Son seguras las ondas binaurales?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "La evidencia científica muestra efectos modestos y mixtos. Escucha a volumen moderado, no las uses conduciendo y evita el audio rítmico si tienes epilepsia o convulsiones. No sustituyen consejo ni tratamiento médico."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "¿Cuánto tiempo debo escuchar?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Se sugieren sesiones de al menos 30 minutos para acompañar tu actividad. En Soundia puedes fijar un auto-stop de 10 a 60 minutos con fade-out, o dejar el loop infinito hasta que la detengas."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "¿Qué frecuencia debo elegir?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Alpha (9–10 Hz) para concentración calmada, estudio y relajación; Theta (6 Hz) para meditación profunda; Gamma (40 Hz) para sesiones avanzadas de inmersión. Si empiezas hoy, comienza por Alpha y ajusta según tu experiencia."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "¿Es gratis? ¿Necesito registrarme?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Es gratis y no requiere registro ni descargas: Soundia sintetiza el audio en vivo con la Web Audio API de tu navegador."
+            }
+          }
+        ]
+      }
+    </script>
   </head>
   <body>
     <app-root></app-root>

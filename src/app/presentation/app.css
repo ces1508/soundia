@@ -59,6 +59,14 @@
 .about ol{margin:0;padding-left:1.2rem;font-size:.9rem}
 .about li{margin-bottom:.5rem}
 .warn{background:rgba(110,59,77,.35);border:1px solid #6e3b4d;border-radius:.75rem;padding:.7rem 1rem;font-size:.85rem}
+/* FAQ: acordeón nativo details/summary — indexable sin JS y sin bundle. */
+.faq{margin-top:2rem;color:#c3c9e2;background:rgba(18,23,46,.45);border:1px solid rgba(255,255,255,.08);border-radius:1.1rem;padding:1.25rem 1.5rem}
+.faq h2{margin:0 0 .5rem;font-size:1.05rem}
+.faq details{border-top:1px solid rgba(255,255,255,.08);padding:.55rem 0}
+.faq details:first-of-type{border-top:0}
+.faq summary{cursor:pointer;font-weight:600;font-size:.92rem;color:#e8eaf2}
+.faq summary::marker{color:#8cffe3}
+.faq details p{margin:.5rem 0 0;font-size:.88rem}
 footer{margin-top:1.5rem;color:#9aa3c7;font-size:.82rem;text-align:center}
 
 @media (min-width:641px){

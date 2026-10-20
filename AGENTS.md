@@ -32,3 +32,11 @@ npm run build      # build producción a dist/soundia
 - `ng generate` para archivos nuevos. Prettier con `.prettierrc` del scaffold.
 - No añadir `zone.js` ni patrones `BrowserModule` de Angular viejo; no usar Karma ni APIs de audio fuera de Web Audio API.
 - Avisos de seguridad/epilepsia del `app.html` ("about"/"warn") deben conservarse si se toca esa vista.
+
+## SEO (todo estático, cero JS extra)
+
+- `src/index.html` concentra metas: `lang="es"`, title keyword-first ("Ondas binaurales gratis online…"), description, canonical, OG/Twitter y JSON-LD (`WebApplication` + `FAQPage`). El canonical y las URLs absolutas apuntan a `https://ces1508.github.io/soundia/` — si cambia el dominio, actualizar TAMBIÉN `public/robots.txt` y `public/sitemap.xml`.
+- El `FAQPage` JSON-LD debe espejar EXACTAMENTE la sección visible "Preguntas frecuentes" de `app.html` (Google penaliza schema con contenido no visible). Preguntas en acordeón `details/summary` (indexable sin JS).
+- `public/`: `robots.txt`, `sitemap.xml`, `manifest.webmanifest` (start_url `/soundia/`) e imágenes (`og-image.png` 1200×630, `icon-192/512.png`, `apple-touch-icon.png`). Las imágenes se generaron renderizando HTML temporal con navegador headless (screenshots viewport); para regenerarlas o rediseñarlas, misma técnica.
+- hreflang NO se añade hasta que exista la versión `/en/`. `index.csr.html` que genera el builder es el fallback CSR, no se edita.
+- Post-deploy pendiente (manual): verificar en Google Search Console + Bing Webmaster, enviar sitemap. Para AdSense: dominio propio recomendado + `ads.txt` tras aprobación.
