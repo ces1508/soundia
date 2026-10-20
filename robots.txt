@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://ces1508.github.io/soundia/sitemap.xml
