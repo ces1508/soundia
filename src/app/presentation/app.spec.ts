@@ -1,4 +1,6 @@
 import { TestBed } from '@angular/core/testing';
+import { SwUpdate, VersionEvent } from '@angular/service-worker';
+import { Subject } from 'rxjs';
 import { App } from './app';
 import { AUDIO_SYNTH, DATA_PROVIDERS } from '../data/di';
 import { MIN_SESSION_SECONDS } from '../domain/model/session';
@@ -7,7 +9,19 @@ import { TRACKS, TRACKS_BY_ID, getTrackById } from '../domain/model/tracks';
 describe('App', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [App], providers: [DATA_PROVIDERS],
+      imports: [App],
+      providers: [
+        ...DATA_PROVIDERS,
+        // Sin provideServiceWorker en tests: SwUpdate no es providedIn
+        // root y App lo consume vía APP_UPDATE → fake inerte.
+        {
+          provide: SwUpdate,
+          useValue: {
+            isEnabled: false,
+            versionUpdates: new Subject<VersionEvent>(),
+          },
+        },
+      ],
     }).compileComponents();
   });
 

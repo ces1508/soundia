@@ -10,6 +10,7 @@ import {
 import {
   AUDIO_DEVICES,
   AUDIO_SYNTH,
+  APP_UPDATE,
   MEDIA_CONTROLS,
 } from '../data/di';
 import {
@@ -35,10 +36,13 @@ const ACCENTS: Record<string, string> = {
  * PRESENTACIÓN · Playlist + player.
  *
  * No conoce Web Audio ni MediaDevices: habla con los PUERTOS del dominio
- * (`AUDIO_SYNTH`, `AUDIO_DEVICES`, `MEDIA_CONTROLS`) y orquesta:
+ * (`AUDIO_SYNTH`, `AUDIO_DEVICES`, `MEDIA_CONTROLS`, `APP_UPDATE`) y
+ * orquesta:
  * - al iniciar sesión o elegir dispositivo → enruta el sink elegido;
  * - al cambiar el estado de reproducción → congela/reanuda el reloj de
- *   sesión y sincroniza metadata/posición con los controles del SO.
+ *   sesión y sincroniza metadata/posición con los controles del SO;
+ * - al haber una versión nueva instalada por el service worker → ofrece
+ *   el banner de actualización (la recarga solo por clic del usuario).
  */
 @Component({
   selector: 'app-root',
@@ -53,6 +57,8 @@ export class App implements OnDestroy {
   protected readonly devices = inject(AUDIO_DEVICES);
   /** Puerto de controles del sistema (Media Session API). */
   protected readonly media = inject(MEDIA_CONTROLS);
+  /** Puerto de actualización de la app (service worker). */
+  protected readonly update = inject(APP_UPDATE);
   protected readonly tracks = TRACKS;
 
   /** Duración objetivo en minutos; null = sin límite (hasta que pares). */

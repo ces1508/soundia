@@ -1,0 +1,23 @@
+{
+  "index": "/index.html",
+  "assetGroups": [
+    {
+      "name": "app",
+      "installMode": "prefetch",
+      "updateMode": "prefetch",
+      "resources": {
+        "files": [
+          "/index.html",
+          "/index.csr.html",
+          "/favicon.ico",
+          "/manifest.webmanifest",
+          "/icon-192.png",
+          "/icon-512.png",
+          "/apple-touch-icon.png",
+          "/*.css",
+          "/*.js"
+        ]
+      }
+    }
+  ]
+}

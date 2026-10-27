@@ -1,6 +1,9 @@
 /* Mobile-first: la base son las pantallas pequeñas; los @media (min-width)
    solo AÑADEN capacidades (nada se deshace). Breakpoint: 640 px, el mismo
    del player en styles.css. */
+.swupdate{position:fixed;top:0;left:0;right:0;z-index:50;display:flex;align-items:center;justify-content:center;gap:.75rem;padding:.5rem 1rem;background:#12162a;border-bottom:1px solid #262c4a;color:#cdd3f5;font-size:.85rem}
+.swupdate button{background:#7c8cff;border:0;border-radius:999px;padding:.3rem .9rem;font-weight:600;color:#0b0e1a;cursor:pointer}
+.swupdate button:hover{filter:brightness(1.1)}
 .page{max-width:860px;margin:0 auto;padding:1.25rem 1rem 8rem;animation:rise .7s ease both}
 @keyframes rise{from{opacity:0;transform:translateY(14px)}}
 .brand{display:flex;align-items:center;gap:.9rem}

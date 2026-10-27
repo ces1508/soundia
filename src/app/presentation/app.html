@@ -1,5 +1,12 @@
 <app-background></app-background>
 
+@if (update.ready()) {
+  <div class="swupdate" role="status" aria-live="polite">
+    <span>Nueva versión disponible</span>
+    <button type="button" (click)="update.apply()">Actualizar</button>
+  </div>
+}
+
 <div class="page">
   <header class="brand">
     <span class="logo" aria-hidden="true"><span></span><span></span><span></span></span>
@@ -168,6 +175,15 @@
       <p>
         Es gratis y no requiere registro ni descargas: Soundia sintetiza el
         audio en vivo con la Web Audio API de tu navegador.
+      </p>
+    </details>
+    <details>
+      <summary>¿Funciona sin internet?</summary>
+      <p>
+        Sí. Tras tu primera visita, Soundia queda guardada en la caché de
+        tu navegador: puedes abrirla en modo avión y el audio se genera en
+        vivo en tu dispositivo, sin descargar archivos. También puedes
+        instalarla como app desde el menú de tu navegador.
       </p>
     </details>
   </section>
