@@ -1,0 +1,62 @@
+{
+  "configVersion": 1,
+  "timestamp": 1793063887599,
+  "index": "/soundia/index.csr.html",
+  "assetGroups": [
+    {
+      "name": "app",
+      "installMode": "prefetch",
+      "updateMode": "prefetch",
+      "cacheQueryOptions": {
+        "ignoreVary": true
+      },
+      "urls": [
+        "/soundia/apple-touch-icon.png",
+        "/soundia/chunk-4EOWWHBV.js",
+        "/soundia/chunk-QGQRP5SC.js",
+        "/soundia/favicon.ico",
+        "/soundia/icon-192.png",
+        "/soundia/icon-512.png",
+        "/soundia/index.csr.html",
+        "/soundia/index.html",
+        "/soundia/main-PRWID7SW.js",
+        "/soundia/manifest.webmanifest",
+        "/soundia/styles-Y4YUL6NE.css"
+      ],
+      "patterns": []
+    }
+  ],
+  "dataGroups": [],
+  "hashTable": {
+    "/soundia/apple-touch-icon.png": "e1820ef456a7dc4330ae0186cc02aaff9534fdf8",
+    "/soundia/chunk-4EOWWHBV.js": "6986c03a98d967a6c742738c4295682f97d729e0",
+    "/soundia/chunk-QGQRP5SC.js": "5796878b618ae8bc47b9195215f79abbd3199efc",
+    "/soundia/favicon.ico": "9c39f434fe1261f68c5e3eefdf734630d99c5670",
+    "/soundia/icon-192.png": "36d62baa8a78a8c905dcb77e4f7975a0bdca32d8",
+    "/soundia/icon-512.png": "daac668bd84c3d771fe80c5b61b4a5f9d31b6019",
+    "/soundia/index.csr.html": "0877619d39eeab5c8206f43baaa40102cfcb467f",
+    "/soundia/index.html": "907b3d706f81d4f274390327bbbe362eb646d43d",
+    "/soundia/main-PRWID7SW.js": "7040a1e337ea4b553c68a2e26162eb8ceb72ba4d",
+    "/soundia/manifest.webmanifest": "43d575ef8f7302ded36c7689f9891ea6482cb96f",
+    "/soundia/styles-Y4YUL6NE.css": "b462bbeacbd6024ebb338b4758d75d913a67df6e"
+  },
+  "navigationUrls": [
+    {
+      "positive": true,
+      "regex": "^\\/.*$"
+    },
+    {
+      "positive": false,
+      "regex": "^\\/(?:.+\\/)?[^/]*\\.[^/]*$"
+    },
+    {
+      "positive": false,
+      "regex": "^\\/(?:.+\\/)?[^/]*__[^/]*$"
+    },
+    {
+      "positive": false,
+      "regex": "^\\/(?:.+\\/)?[^/]*__[^/]*\\/.*$"
+    }
+  ],
+  "navigationRequestStrategy": "performance"
+}
